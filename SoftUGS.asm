@@ -380,9 +380,9 @@ tableconv:
 ; Les 5 lignes suivantes contiennent les intitulés des entrées (12 caractères Max)
 ; Ils sont stockés en EEPROM pour pouvoir être modifiés
 ; 144 0123456789ABCDEF
-.db  "Grammophone     "													; Entrée 1
+.db  "ZET1            "													; Entrée 1
 ; 160 0123456789ABCDEF
-.db  "Compact Disc    "													; Entrée 2
+.db  "EMT 948         "													; Entrée 2
 ; 176
 .db  "DAC             "													; Entrée 3
 ; 192
@@ -400,7 +400,7 @@ tableconv:
 
 .org 0x0100
 ;    0123456789ABCDEF0123
-.db "  UGS Preamp V2.01  ",FinLigne										; Ligne 1
+.db "  UGS Preamp V2.02  ",FinLigne										; Ligne 1
 ;    0123456789ABCDEF0123
 .db	"   Thanks Nelson   ",7,FinChaine									; Ligne 2
 
