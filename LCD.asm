@@ -207,7 +207,7 @@ S2:		cpi		Char,'p'
 		ret
 S3:		cpi		Char,'q'
 		brne	S4
-		ldi		Char,0xF1'
+		ldi		Char,0xF1 
 		ret
 S4:		cpi		Char,'y'
 		brne	S5
