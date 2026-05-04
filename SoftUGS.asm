@@ -858,13 +858,19 @@ PowRelease:											; Si jamais "le triggage" était commandé par les boutons
 		clr		Work								; Au cas où on l'aurait démarré
 		out		TCCR2,Work							; on arrête le timer 2
 
-		clr		StatReg1							; Efface les deux registres d'état
-		clr		StatReg2							; 
-
+		cli											; Section atomique
+		sbrc	StatReg1,FlagPower					; L'ISR a-t-elle positionné FlagPower ?
+		rjmp	DodoWake							; Oui -> On se réveille
+		clr		StatReg1							; Non -> Efface les registres d'état
+		clr		StatReg2
         ldi     Work,0b00000011 	                ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work          	            ; (Enable Interrupt Mask)
-
+		sei
 		rjmp	Dodo								; et se rendort aussi sec...
+
+DodoWake:
+		sei
+		rjmp	AllezDebout							; On se réveille !
 
 ; -----------------------------------------
 ; -- Le plus dur : la phase de réveil... --
