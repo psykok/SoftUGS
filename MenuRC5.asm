@@ -28,6 +28,8 @@ WaitMenuRC5:
 ; -- Pour cette routine en particulier, on rétablit l'interruption INT1
 ; -- pour détecter la transmission d'un ordre IR
 
+		ldi		Work,0b00000000
+		sts		EICRA,Work
 		ldi		Work,0b00000010
 		out		EIMSK,Work
 
@@ -176,6 +178,9 @@ WaitBeforeExitRC5Menu:
 
 		clr		Work
 		out		EIMSK,Work							; On inhibe toutes les interruptions
+
+		ldi		Work,0b00001000							; Restore INT1 front descendant
+		sts		EICRA,Work
 
 		ret											; on se casse de ce menu
 

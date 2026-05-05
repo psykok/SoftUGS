@@ -642,7 +642,7 @@ Init:
         clr     Work                            	; On inhibe les interruptions externes.....
         out     EIMSK,Work                      	; par mesure de précaution avant de changer leur mode de déclenchement
 
-		ldi		Work,0b00000000						; INT0=niveau bas, INT1=niveau bas
+		ldi		Work,0b00001000						; INT0=niveau bas, INT1=front descendant
 		sts 	EICRA,Work							; (sts au lieu de out)
 
         ldi     Work,0b00010000                 	; Autorise le Sleep Mode en PowerDown 
@@ -847,6 +847,8 @@ Dodo :
 
 DodoClearIR:
 		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
+		ldi		Work,0b00000010						; Efface INTF1
+		out		EIFR,Work
 		ldi		Work,0b00000011						; Réactive INT0 et INT1
 		out		EIMSK,Work
 
@@ -872,6 +874,8 @@ PowRelease:											; Si jamais "le triggage" était commandé par les boutons
 		rjmp	DodoWake							; Oui -> On se réveille
 		clr		StatReg1							; Non -> Efface les registres d'état
 		clr		StatReg2
+        ldi     Work,0b00000010 	                ; Efface le flag INTF1
+        out     EIFR,Work           	            ;
         ldi     Work,0b00000011 	                ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work          	            ; (Enable Interrupt Mask)
 		sei
@@ -1194,6 +1198,8 @@ EnRoute:
 
 ; -- On n'oublie pas d'autoriser les interruptions externes --
 
+        ldi     Work,0b00000010                 	; Efface le flag INTF1 avant de réactiver INT1
+        out     EIFR,Work                       	; (nécessaire en mode front descendant)
         ldi     Work,0b00000011                 	; On autorise les interruptions externes INT 0 et INT1 
         out     EIMSK,Work                      	; (Enable Interrupt Mask)
 
@@ -1225,6 +1231,8 @@ MainLoop:
 
 MainLoopIRClear:
 		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
+		ldi		Work,0b00000010						; Efface INTF1
+		out		EIFR,Work
 		ldi		Work,0b00000011						; Réactive INT0 et INT1
 		out		EIMSK,Work
 
@@ -1500,6 +1508,8 @@ FaisDodo:
 
 		clr		StatReg1							; efface les registres d'état
 		clr		StatReg2							; 
+        ldi     Work,0b00000010                 	; Efface le flag INTF1
+        out     EIFR,Work                       	;
         ldi     Work,0b00000011                 	; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work                      	; (Enable Interrupt Mask)
 
