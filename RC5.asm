@@ -465,11 +465,6 @@ RecContrastM:
 
 ExitRecRC5:
 
-        ldi     Work,0b00000010                 ; Efface le flag INTF1 pour éviter une interruption parasite
-        out     EIFR,Work                       ; (nécessaire en mode front descendant)
-        ldi     Work,0b00000011                 ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
-        out     EIMSK,Work                      ; (Enable Interrupt Mask)
-
 		call	StartIdle						; on relance le timer de "fout rien"
 		ret
 
