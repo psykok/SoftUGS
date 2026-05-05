@@ -50,15 +50,21 @@ PORT ?= usb
 AVRA ?= avra
 AVRDUDE ?= avrdude
 
+# --- Version (extracted from Definitions.asm) ---
+
+VERSION_MAJOR := $(shell grep -m1 'VersionMajor' Definitions.asm | sed 's/.*=[[:space:]]*//' | sed 's/[[:space:]].*//')
+VERSION_MINOR := $(shell grep -m1 'VersionMinor' Definitions.asm | sed 's/.*=[[:space:]]*//' | sed 's/[[:space:]].*//')
+VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
+
 # --- Files ---
 
 SRC = SoftUGS.asm
 BUILD_DIR = build
-OUT_HEX = $(BUILD_DIR)/SoftUGS-$(TARGET).hex
-OUT_EEP = $(BUILD_DIR)/SoftUGS-$(TARGET).eep
+OUT_HEX = $(BUILD_DIR)/SoftUGS-$(VERSION)-$(TARGET).hex
+OUT_EEP = $(BUILD_DIR)/SoftUGS-$(VERSION)-$(TARGET).eep
 
 # Preprocessed source with the correct target #define active
-PREP_SRC = $(BUILD_DIR)/SoftUGS-$(TARGET).asm
+PREP_SRC = $(BUILD_DIR)/SoftUGS-$(VERSION)-$(TARGET).asm
 
 # All assembly source files (for dependency tracking)
 ASM_SOURCES = $(wildcard *.asm *.ASM)
@@ -117,13 +123,16 @@ $(OUT_HEX): $(PREP_SRC)
 	cd $(BUILD_DIR) && $(AVRA) $(notdir $(PREP_SRC)) -o $(notdir $(OUT_HEX)) -e $(notdir $(OUT_EEP)) -l /dev/null
 	@echo "Build complete: $(OUT_HEX)"
 
-# Flash program memory
+# Flash program memory (uses the most recent .hex file in build/)
+LATEST_HEX = $(shell ls -t $(BUILD_DIR)/SoftUGS-*.hex 2>/dev/null | head -1)
+LATEST_EEP = $(shell ls -t $(BUILD_DIR)/SoftUGS-*.eep 2>/dev/null | head -1)
+
 flash: $(OUT_HEX)
-	$(AVRDUDE) -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U flash:w:$(OUT_HEX):i
+	$(AVRDUDE) -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U flash:w:$(LATEST_HEX):i
 
 # Flash EEPROM
 flash-eeprom: $(OUT_HEX)
-	$(AVRDUDE) -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U eeprom:w:$(OUT_EEP):i
+	$(AVRDUDE) -p $(MCU) -c $(PROGRAMMER) -P $(PORT) -U eeprom:w:$(LATEST_EEP):i
 
 # Flash both
 flash-all: flash flash-eeprom
