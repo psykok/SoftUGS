@@ -910,8 +910,8 @@ Wait1:	dec     Work
         
 ; -- On n'oublie pas d'autoriser les interruptions externes --
 
-        ldi     Work,0b00000011                 	; On autorise les interruptions externes INT 0 et INT1 
-        out     EIMSK,Work                      	; (Enable Interrupt Mask)
+        ldi     Work,0b00000001                 	; On autorise seulement INT0 (bouton power) pendant le démarrage
+        out     EIMSK,Work                      	; INT1 (IR) sera activé plus tard dans MainLoop
 
 ; --------------------------------------------------------------------------------------
 ; -- On commence par fixer la luminosité au minimum avant l'alimentation du backlight --
