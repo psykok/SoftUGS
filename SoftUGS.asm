@@ -1220,13 +1220,7 @@ MainLoop:
 		sbrs	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
 		rjmp	MainLoopNoIR						; 	- Non, on passe à la suite
 
-		sbic	PinsRC5,InRC5						; Le pin IR est-il à 0 (signal présent) ?
-		rjmp	MainLoopIRClear						; 	- Non (pin=1), c'est du bruit
 		call	RecRC5								; 	- Oui, on décode
-		rjmp	MainLoopNoIR
-
-MainLoopIRClear:
-		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
 MainLoopNoIR:
 
 ; -- On réarme INT1 seulement si le pin IR est au repos (HIGH) --
