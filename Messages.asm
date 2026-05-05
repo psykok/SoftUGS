@@ -469,6 +469,10 @@ MenuRC5CmdContrastMMessage:
 ;    0123456789ABCDEF0123
 .db	"< Contrast - :     >",FinChaine,0
 
+MenuRC5ClearAllMessage:
+;    0123456789ABCDEF0123
+.db	"< Clear All Codes  >",FinChaine,0
+
 MenuRC5PressKeyMessage:
 ;    0123456789ABCDEF0123
 .db	" Press key to learn ",FinChaine,0

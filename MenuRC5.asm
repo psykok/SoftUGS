@@ -59,7 +59,7 @@ ChangeRC5Menu:
 
 IncRC5MenuReg1:										; Incrémentation du numéro de menu
 		mov		Work,MenuReg1						; transfert dans un registre immédiat
-		cpi		Work,15								; c'est le dernier menu ?
+		cpi		Work,16								; c'est le dernier menu ?
 		brne	DoIncRC5MR1							; non, alors on peut incrémenter sans pb
 
 		clr		MenuReg1							; sinon, on le repasse à 0		
@@ -84,10 +84,10 @@ DecRC5MenuReg1:										; Décrémentation du numéro de menu
 		cpi		Work,0								; c'est le dernier menu ?
 		brne	DoDecRC5MR1							; non, alors on peut décrémenter sans pb
 
-		ldi		Work,15
+		ldi		Work,16
 		mov		MenuReg1,Work						; sinon, on le repasse à 15		
-		ldi		ZH,HIGH(MenuRC5CmdContrastMMessage*2)
-		ldi		ZL,LOW(MenuRC5CmdContrastMMessage*2)
+		ldi		ZH,HIGH(MenuRC5ClearAllMessage*2)
+		ldi		ZL,LOW(MenuRC5ClearAllMessage*2)
 		rjmp	AfficheMenuRC50						; et on va afficher la chaine qu'il faut
 
 DoDecRC5MR1:
@@ -124,6 +124,11 @@ MenuRC5EnterLearn:
 		sbic	PinMenu,SwitchMenu					; Un vrai appui sur le bouton de menu ?
 		rjmp	LoopLevelR0							; Sinon,on revient dans la boucle
 
+		mov		Work,MenuReg1
+		cpi		Work,16
+		brne	MenuRC5DoLearn
+		rjmp	MenuRC5ClearAll
+MenuRC5DoLearn:
 		call	MenuRC5LearnKey						; On va apprendre le nouveau code
 
 		ldi		Work,0								; Au retour, on se place
@@ -151,7 +156,12 @@ MenuRC5FoundRightAdress:
 		call	DisplayPlaceCurseur					; sur la seconde ligne de l'afficheur
 
 		call	DisplayAfficheChaine
+
+		mov		Work,MenuReg1
+		cpi		Work,16
+		breq	MenuRC5SkipCodeDisplay
 		call	MenuRC5AfficheCodeIR
+MenuRC5SkipCodeDisplay:
 		call	DisplayArrow
 		rjmp	LoopLevelR0							; et on continue la boucle
 
@@ -290,6 +300,73 @@ ExitRC5LearnKeySave:								; Sortie en sauvegardant la commande
 		call	AfficheSaving						; Affiche le message de sauvegarde
 
 		ret
+
+; --------------------------------------------------------
+; -- Effacement de tous les codes RC5 enregistrés       --
+; --------------------------------------------------------
+
+MenuRC5ClearAll:
+		sbis	PinMenu,SwitchMenu
+		rjmp	MenuRC5ClearAll
+
+		ldi		Work,0
+		call	DisplayPlaceCurseur
+		ldi		ZH,HIGH(MenuRC5ClearAllMessage*2)
+		ldi		ZL,LOW(MenuRC5ClearAllMessage*2)
+		call	DisplayAfficheChaine
+
+		ldi		Work,0x40
+		call	DisplayPlaceCurseur
+		ldi		ZH,HIGH(MenuEEPromSure*2)
+		ldi		ZL,LOW(MenuEEPromSure*2)
+		call	DisplayAfficheChaine
+
+MenuRC5ClearWait:
+		sbis	PinSwitchMC,SwitchMC
+		rjmp	MenuRC5ClearCancel
+
+		sbic	PinMenu,SwitchMenu
+		rjmp	MenuRC5ClearWait
+
+		call	Attendre
+		sbic	PinMenu,SwitchMenu
+		rjmp	MenuRC5ClearWait
+
+		ldi		ZH,RAM_Start
+		ldi		ZL,RAM_IRSytemID
+		ldi		Work1,EE_IRSytemID
+
+MenuRC5ClearLoop:
+		ldi		Work2,0xFF
+		st		Z+,Work2
+
+		mov		Work,Work1
+		call	WriteEEprom
+
+		inc		Work1
+		cpi		Work1,EE_Stop_IR
+		brne	MenuRC5ClearLoop
+
+		ldi		Work,SaveLong
+		call	AfficheSaving
+
+		ldi		Work,0
+		call	DisplayPlaceCurseur
+		ldi		ZH,HIGH(MenuRC5Key2learnMessage*2)
+		ldi		ZL,LOW(MenuRC5Key2learnMessage*2)
+		call	DisplayAfficheChaine
+		rjmp	MenuRC5DisplayCommand
+
+MenuRC5ClearCancel:
+		sbis	PinSwitchMC,SwitchMC
+		rjmp	MenuRC5ClearCancel
+
+		ldi		Work,0
+		call	DisplayPlaceCurseur
+		ldi		ZH,HIGH(MenuRC5Key2learnMessage*2)
+		ldi		ZL,LOW(MenuRC5Key2learnMessage*2)
+		call	DisplayAfficheChaine
+		rjmp	MenuRC5DisplayCommand
 
 ; --------------------------------------------------------
 ; -- Affichage du code RC5 pour une commande donnée     --

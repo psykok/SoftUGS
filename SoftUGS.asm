@@ -380,9 +380,9 @@ tableconv:
 ; Les 5 lignes suivantes contiennent les intitulés des entrées (12 caractères Max)
 ; Ils sont stockés en EEPROM pour pouvoir être modifiés
 ; 144 0123456789ABCDEF
-.db  "Grammophone     "													; Entrée 1
+.db  "ZET1            "													; Entrée 1
 ; 160 0123456789ABCDEF
-.db  "Compact Disc    "													; Entrée 2
+.db  "EMT 948         "													; Entrée 2
 ; 176
 .db  "DAC             "													; Entrée 3
 ; 192
@@ -400,7 +400,7 @@ tableconv:
 
 .org 0x0100
 ;    0123456789ABCDEF0123
-.db "  UGS Preamp V2.01  ",FinLigne										; Ligne 1
+.db "  UGS Preamp V",'0'+VersionMajor,'.','0'+VersionMinor/10,'0'+VersionMinor-(VersionMinor/10*10),"  ",FinLigne	; Ligne 1
 ;    0123456789ABCDEF0123
 .db	"   Thanks Nelson   ",7,FinChaine									; Ligne 2
 
@@ -642,8 +642,8 @@ Init:
         clr     Work                            	; On inhibe les interruptions externes.....
         out     EIMSK,Work                      	; par mesure de précaution avant de changer leur mode de déclenchement
 
-		clr		Work								; Configure les interuptions pour un niveau 0 
-		sts 	EICRA,Work							; pour les deux (sts au lieu de out)
+		ldi		Work,0b00001000						; INT0=niveau bas, INT1=front descendant
+		sts 	EICRA,Work							; (sts au lieu de out)
 
         ldi     Work,0b00010000                 	; Autorise le Sleep Mode en PowerDown 
         out     MCUCR,Work                      	; + les interruptions externes
@@ -858,13 +858,19 @@ PowRelease:											; Si jamais "le triggage" était commandé par les boutons
 		clr		Work								; Au cas où on l'aurait démarré
 		out		TCCR2,Work							; on arrête le timer 2
 
-		clr		StatReg1							; Efface les deux registres d'état
-		clr		StatReg2							; 
-
+		cli											; Section atomique
+		sbrc	StatReg1,FlagPower					; L'ISR a-t-elle positionné FlagPower ?
+		rjmp	DodoWake							; Oui -> On se réveille
+		clr		StatReg1							; Non -> Efface les registres d'état
+		clr		StatReg2
         ldi     Work,0b00000011 	                ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work          	            ; (Enable Interrupt Mask)
-
+		sei
 		rjmp	Dodo								; et se rendort aussi sec...
+
+DodoWake:
+		sei
+		rjmp	AllezDebout							; On se réveille !
 
 ; -----------------------------------------
 ; -- Le plus dur : la phase de réveil... --
