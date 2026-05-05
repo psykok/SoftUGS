@@ -531,11 +531,7 @@
 .equ	IMM=0
 #endif
 
-#if	defined(FLAT)
 .equ	Stec		=4						; Le pas de l'encodeur
-#else
-.equ	Stec		=2
-#endif
 
 #if defined(CRYSTALFONTZ)
 .equ	Nb			=3						; Le caractère	"°"
