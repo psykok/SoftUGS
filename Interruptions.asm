@@ -75,8 +75,9 @@ IRRecInt:
 
 		sbr		StatReg2,EXP2(FlagIRRec)			; Passe le Flag de réception IR à 1
 	
-		ldi     Work,0b00000001						; On inhibe INT1 seulement, INT0 reste actif
-		out     EIMSK,Work							; pour ne pas bloquer le bouton on/off
+		in      Work,EIMSK							; On lit le masque d'interruptions actuel
+		andi    Work,0b11111101						; On inhibe INT1 seulement, on préserve INT0
+		out     EIMSK,Work							; pour ne pas interférer avec le démarrage
 
 		pop		Work								; On récupère le registre éventuellement modifié
 		out		SREG,Work							; Récupère le Status Register
