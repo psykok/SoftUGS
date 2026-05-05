@@ -899,6 +899,12 @@ Wait1:	dec     Work
 ; -- amplis ou bien seulement l'ampli casque              --
 ; ----------------------------------------------------------
 
+		clr		StatReg1								; Efface les flags pour que MultiDelay prenne le bon chemin
+		sbr		StatReg1,EXP2(FlagPower)				; Mais on garde FlagPower actif
+
+		ldi		Work,0b00000100							; Réactive l'interruption overflow du Timer 3
+		sts		ETIMSK,Work								; au cas où IdleTiming l'aurait désactivée
+
 		clr		Work
 		ldi		ZH,RAM_Start
 		ldi		ZL,RAM_Tempo
