@@ -642,7 +642,7 @@ Init:
         clr     Work                            	; On inhibe les interruptions externes.....
         out     EIMSK,Work                      	; par mesure de précaution avant de changer leur mode de déclenchement
 
-		ldi		Work,0b00001000						; INT0=niveau bas, INT1=front descendant
+		ldi		Work,0b00000000						; INT0=niveau bas, INT1=niveau bas
 		sts 	EICRA,Work							; (sts au lieu de out)
 
         ldi     Work,0b00010000                 	; Autorise le Sleep Mode en PowerDown 
