@@ -2,6 +2,9 @@
 ;*** Paramètres éditables ***
 ;****************************
 
+.equ	VersionMajor	= 2					; Version X.yy
+.equ	VersionMinor	= 02				; Version x.YY
+
 .equ	DisplaySize		=20					; Taille de l'afficheur utilisé en nombre de caractères (pour une ligne)
 
 .equ	NameSize		=12					; La longueur du nom d'une entrée.

@@ -400,7 +400,7 @@ tableconv:
 
 .org 0x0100
 ;    0123456789ABCDEF0123
-.db "  UGS Preamp V2.02  ",FinLigne										; Ligne 1
+.db "  UGS Preamp V",'0'+VersionMajor,'.','0'+VersionMinor/10,'0'+VersionMinor-(VersionMinor/10*10),"  ",FinLigne	; Ligne 1
 ;    0123456789ABCDEF0123
 .db	"   Thanks Nelson   ",7,FinChaine									; Ligne 2
 
