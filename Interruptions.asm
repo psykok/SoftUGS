@@ -75,9 +75,8 @@ IRRecInt:
 
 		sbr		StatReg2,EXP2(FlagIRRec)			; Passe le Flag de réception IR à 1
 	
-		in      Work,EIMSK							; On lit le masque d'interruptions actuel
-		andi    Work,0b11111101						; On inhibe INT1 seulement, on préserve INT0
-		out     EIMSK,Work							; pour ne pas interférer avec le démarrage
+		clr     Work			        			; On va inhiber les interruptions externes pour
+		out     EIMSK,Work							; éviter de les redéclencher au retour de l'interruption
 
 		pop		Work								; On récupère le registre éventuellement modifié
 		out		SREG,Work							; Récupère le Status Register

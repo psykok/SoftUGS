@@ -872,8 +872,6 @@ PowRelease:											; Si jamais "le triggage" était commandé par les boutons
 		rjmp	DodoWake							; Oui -> On se réveille
 		clr		StatReg1							; Non -> Efface les registres d'état
 		clr		StatReg2
-        ldi     Work,0b00000010 	                ; Efface le flag INTF1
-        out     EIFR,Work           	            ;
         ldi     Work,0b00000011 	                ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work          	            ; (Enable Interrupt Mask)
 		sei
@@ -1217,10 +1215,9 @@ MainLoop:
 
 ; -- Si le flag de réception IR est positionné, c'est qu'on a reçu une commande Infra-Rouge
 
-		sbrs	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
-		rjmp	MainLoopNoIR						; 	- Non, on passe à la suite
+		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
+		call	RecRC5								; 	- Bé oui, alors on va ouar ce que c'est
 
-		call	RecRC5								; 	- Oui, on décode
 MainLoopNoIR:
 
 ; -- On réarme INT1 seulement si le pin IR est au repos (HIGH) --
