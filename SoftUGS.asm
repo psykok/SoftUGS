@@ -836,10 +836,19 @@ Dodo :
 		rjmp	WakeOnPowerSwitch					; 	- Non, alors on va voir si c'est le bouton On/StandBy qui nous a réveillé 
 
 													; 	- Oui, alors on va voir si c'était pour se réveiller...
+		sbic	PinsRC5,InRC5						; Le pin IR est-il à 0 ?
+		rjmp	DodoClearIR							; 	- Non (pin=1), c'est du bruit
+
 		ldi 	Work,1								; Pour la réception IR, on est obligé de redémarrer le Timer 2 pour effectuer le décodage
 		out		TCCR2,Work							; Démarre le Timer 2 à CK (pas de prescaler) -> 1 cycle de comptage dure 250ns
 
 		call	RecRC5								; On va voir quelle commande c'était
+		rjmp	WakeOnPowerSwitch
+
+DodoClearIR:
+		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
+		ldi		Work,0b00000011						; Réactive INT0 et INT1
+		out		EIMSK,Work
 
 WakeOnPowerSwitch:
 
@@ -1200,8 +1209,20 @@ MainLoop:
 
 ; -- Si le flag de réception IR est positionné, c'est qu'on a reçu une commande Infra-Rouge
 
-		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
-		call	RecRC5								; 	- Bé oui, alors on va ouar ce que c'est
+		sbrs	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
+		rjmp	MainLoopNoIR						; 	- Non, on passe à la suite
+
+		sbic	PinsRC5,InRC5						; Le pin IR est-il à 0 (signal présent) ?
+		rjmp	MainLoopIRClear						; 	- Non (pin=1), c'est du bruit
+		call	RecRC5								; 	- Oui, on décode
+		rjmp	MainLoopNoIR
+
+MainLoopIRClear:
+		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
+		ldi		Work,0b00000011						; Réactive INT0 et INT1
+		out		EIMSK,Work
+
+MainLoopNoIR:
 
         sbrs    StatReg1,FlagPower             		 ; Si jamais l'ordre IR était d'arrêter le biniou
         rjmp    FallAsleep                     		 ; on y va immédiatement
