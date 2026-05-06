@@ -1308,9 +1308,17 @@ TestBypass:
 		rcall 	LectureEncodeur						; Lecture de l'encodeur
 		sbrs	StatReg1,FlagIncremente				; doit-on incrémenter le volume
 		sbrc	StatReg1,FlagDecremente				; ou le décrémenter ?
-		rcall	ChangeVolume						; l'un des deux...
+		rjmp	MainLoopDoVolume					; l'un des deux...
 
 		rjmp 	MainLoop							; et on boucle
+
+MainLoopDoVolume:
+		clr		Work
+		out		EIMSK,Work							; Inhibe INT1 pendant la comm AD8402
+		rcall	ChangeVolume
+		ldi		Work,0b00000011
+		out		EIMSK,Work							; Réactive INT0 et INT1
+		rjmp	MainLoop
 
 ; -- On remet tout comifo après un passage dans le menu --
 
