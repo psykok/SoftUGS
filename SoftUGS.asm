@@ -1228,7 +1228,13 @@ MainLoop:
 ; -- Si le flag de réception IR est positionné, c'est qu'on a reçu une commande Infra-Rouge
 
 		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
-		call	RecRC5								; Oui, on décode la commande IR
+		rjmp	MainLoopGotIR						; Oui, on va décoder
+		rjmp	MainLoopNoIR						; Non, on passe
+
+MainLoopGotIR:
+		cbi	PortLedOn,LedOn							; Eteint la LED (diagnostic)
+		call	RecRC5								; Décode la commande IR
+		sbi	PortLedOn,LedOn							; Rallume la LED
 
 MainLoopNoIR:
 

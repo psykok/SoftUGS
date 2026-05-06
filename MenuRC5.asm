@@ -223,7 +223,9 @@ MenuRC5WaitKey:
 		rjmp	ExitRC5LearnKeySave					; oui, alors on va sauver
 
 MenuRC5LearnIR:
+		cbi	PortLedOn,LedOn							; Diagnostic: LED off
 		call	IRDetect							; On va voir ce qu'on a reçu
+		sbi	PortLedOn,LedOn							; Diagnostic: LED on
 
 		cpi		SystemIR,255
 		breq	MenuRC5ReturnFromLearn				; Erreur de transmission
