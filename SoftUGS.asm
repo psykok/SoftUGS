@@ -882,8 +882,11 @@ PowRelease:											; Si jamais "le triggage" était commandé par les boutons
 		clr		StatReg2
         ldi     Work,0b00000011 	                ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work          	            ; (Enable Interrupt Mask)
-		sei
-		rjmp	Dodo								; et se rendort aussi sec...
+		ldi		Work,0b00100000						; Active le Sleep Mode en Idle
+		out		MCUCR,Work
+		sei											; Interruptions activées après sleep
+		sleep										; Le MCU dort en mode Idle
+		rjmp	Dodo								; Au réveil, on reboucle...
 
 DodoWake:
 		sei
@@ -1508,10 +1511,14 @@ FaisDodo:
 
 		clr		StatReg1							; efface les registres d'état
 		clr		StatReg2							; 
+		cli											; Inhibe les interruptions avant de configurer le sleep
         ldi     Work,0b00000011                 	; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
         out     EIMSK,Work                      	; (Enable Interrupt Mask)
-
-		rjmp	Dodo								; Et on s'endort complètement...
+		ldi		Work,0b00100000						; Active le Sleep Mode en Idle
+		out		MCUCR,Work
+		sei											; Interruptions activées après sleep
+		sleep										; Le MCU dort en mode Idle
+		rjmp	Dodo								; Au réveil, on reboucle...
 
 ; -- Chhhhhhhhhhuuuuuuutttttttt............
 
