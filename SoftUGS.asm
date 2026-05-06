@@ -620,7 +620,7 @@ Init:
 
 		ldi 	Work,0b11101100						; 1 pour les sorties, 0 pour les entrées
 		out		DDRD,Work
-		clr		Work								; et on désactive les pullups
+		ldi 	Work,0b00000011						; Active les pullups sur PD0 (Power) et PD1 (IR)
 		out		PORTD,Work							; sur les entrées de ce port
 		
 ; --- Port E : Les 2 premiers bits en entrée (MOSI et MISO sont sur un bateau),
@@ -832,6 +832,14 @@ Main:   cli                        	    	        ; Pour démarrer, on interdit le
 ; -----------------------
 
 Dodo :
+		sbic	PinSwitchOn,SwitchOn				; Bouton Power appuyé (PD0=0) ?
+		rjmp	DodoCheckIR							; Non -> On va regarder l'IR
+DodoPollWait:
+		sbis	PinSwitchOn,SwitchOn				; On attend le relâchement du bouton
+		rjmp	DodoPollWait
+		sbr		StatReg1,EXP2(FlagPower)			; Bouton relâché -> On se réveille !
+		rjmp	AllezDebout
+DodoCheckIR:
 		sbrs	StatReg2,FlagIRRec					; On a reçu une commande IR ?
 		rjmp	WakeOnPowerSwitch					; 	- Non, alors on va voir si c'est le bouton On/StandBy qui nous a réveillé 
 
@@ -1683,6 +1691,8 @@ WaitWEEProm:
         rjmp    WaitWEEProm
 
 		out     EEARL,Work                      ; On charge "l'adresse" pour l'EEPROM
+			clr		Work
+			out		EEARH,Work						; Sécurise l'adresse haute à 0
 		out     EEDR,Work2                      ; ainsi que la donnée
         
         sbi     EECR,EEMWE                      ; Master Write Enable
