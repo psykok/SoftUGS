@@ -29,6 +29,7 @@ WaitMenuRC5:
 ; -- pour détecter la transmission d'un ordre IR
 
 		ldi		Work,0b00000010
+		out		EIFR,Work
 		out		EIMSK,Work
 
 LoopLevelR0:
@@ -265,6 +266,7 @@ MenuRC5ReturnFromLearn:
 
 		cbr		StatReg2,EXP2(FlagIRRec)			; On repasse le flag de réception à 0 
 		ldi		Work,0b00000010						; Et on rétablit l'interruption IR
+		out		EIFR,Work
 		out		EIMSK,Work							; Qui avait été désactivée dans la routine d'interruption
 
 		rjmp	MenuRC5WaitKey
