@@ -466,7 +466,6 @@ RecContrastM:
 ExitRecRC5:
 
         ldi     Work,0b00000011                 ; On réautorise les interruptions externes INT 1 et INT 0
-        out		EIFR,Work
         out     EIMSK,Work                      ; (Enable Interrupt Mask)
 
 		call	StartIdle						; on relance le timer de "fout rien"

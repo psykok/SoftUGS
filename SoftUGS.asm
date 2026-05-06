@@ -649,7 +649,6 @@ Init:
         out     MCUCR,Work                      	; + les interruptions externes
  
         ldi     Work,0b00000011                 	; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
-        out		EIFR,Work
         out     EIMSK,Work                      	; (Enable Interrupt Mask)
 
 ; --- Pour les timers ---
@@ -857,7 +856,6 @@ DodoCheckIR:
 DodoClearIR:
 		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
 		ldi		Work,0b00000011						; Réactive INT0 et INT1
-		out		EIFR,Work
 		out		EIMSK,Work
 
 WakeOnPowerSwitch:
@@ -883,7 +881,6 @@ PowRelease:											; Si jamais "le triggage" était commandé par les boutons
 		clr		StatReg1							; Non -> Efface les registres d'état
 		clr		StatReg2
         ldi     Work,0b00000011 	                ; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
-        out		EIFR,Work
         out     EIMSK,Work          	            ; (Enable Interrupt Mask)
 		sei
 		rjmp	Dodo								; et se rendort aussi sec...
@@ -1206,7 +1203,6 @@ EnRoute:
 ; -- On n'oublie pas d'autoriser les interruptions externes --
 
         ldi     Work,0b00000011                 	; On autorise les interruptions externes INT 0 et INT1 
-        out		EIFR,Work
         out     EIMSK,Work                      	; (Enable Interrupt Mask)
 
 		cbr		StatReg2,EXP2(FlagIRRec)			; Réinitialise le Flag de réception IR	
@@ -1228,13 +1224,7 @@ MainLoop:
 ; -- Si le flag de réception IR est positionné, c'est qu'on a reçu une commande Infra-Rouge
 
 		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
-		rjmp	MainLoopGotIR						; Oui, on va décoder
-		rjmp	MainLoopNoIR						; Non, on passe
-
-MainLoopGotIR:
-		cbi	PortLedOn,LedOn							; Eteint la LED (diagnostic)
-		call	RecRC5								; Décode la commande IR
-		sbi	PortLedOn,LedOn							; Rallume la LED
+		call	RecRC5								; 	- Bé oui, alors on va ouar ce que c'est
 
 MainLoopNoIR:
 
@@ -1245,7 +1235,6 @@ MainLoopNoIR:
 		sbis	PinsRC5,InRC5						; Pin IR au repos (HIGH) ?
 		rjmp	MainLoopSkipRearm					;	- Non (LOW), on ne réarme pas
 		ldi		Work,0b00000011						; Les 2 conditions sont OK
-		out		EIFR,Work
 		out		EIMSK,Work							; On réactive INT0 et INT1
 MainLoopSkipRearm:
 
@@ -1520,7 +1509,6 @@ FaisDodo:
 		clr		StatReg1							; efface les registres d'état
 		clr		StatReg2							; 
         ldi     Work,0b00000011                 	; On réautorise seulement les 2 interruptions externes INT 1 et INT 0
-        out		EIFR,Work
         out     EIMSK,Work                      	; (Enable Interrupt Mask)
 
 		rjmp	Dodo								; Et on s'endort complètement...
