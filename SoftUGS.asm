@@ -1223,8 +1223,17 @@ MainLoop:
 
 ; -- Si le flag de réception IR est positionné, c'est qu'on a reçu une commande Infra-Rouge
 
-		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
-		call	RecRC5								; 	- Bé oui, alors on va ouar ce que c'est
+		sbrs	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
+		rjmp	MainLoopNoIR						; 	- Non, on passe
+		sbic	PinsRC5,InRC5						; Le pin IR est-il toujours à 0 (signal actif) ?
+		rjmp	MainLoopIRNoise						; 	- Non (pin=1), c'est du bruit
+		call	RecRC5								; 	- Oui, alors on décode
+		rjmp	MainLoopNoIR
+
+MainLoopIRNoise:
+		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR (c'était du bruit)
+		ldi		Work,0b00000011						; Réactive INT0 et INT1
+		out		EIMSK,Work
 
 MainLoopNoIR:
 
