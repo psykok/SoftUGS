@@ -73,6 +73,11 @@ IRRecInt:
 		in		Work,SREG
 		push	Work
 
+		ldi		Work,67									; 67 x 3 cycles = ~50µs @ 4MHz
+IRRecIntDelay:
+		dec		Work
+		brne	IRRecIntDelay
+
 		sbic	PinsRC5,InRC5						; PD1 encore à 0 (signal réel) ?
 		rjmp	IRRecIntNoise						; Non (déjà remonté), c'est du bruit
 
