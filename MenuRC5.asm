@@ -226,19 +226,38 @@ MenuRC5WaitKey:
 		rjmp	ExitRC5LearnKeySave					; oui, alors on va sauver
 
 MenuRC5IRDetected:
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'*'
+		call	DisplayWriteChar
 		ldi		Work,133								; ~100µs de debounce (133 x 3 cycles @ 4MHz)
 MenuRC5IRDebounce:
 		dec		Work
 		brne	MenuRC5IRDebounce
 		sbis	PinsRC5,InRC5						; PD1 toujours à 0 ?
 		rjmp	MenuRC5LearnIR						; Oui, signal réel
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'.'
+		call	DisplayWriteChar
 		rjmp	MenuRC5WaitKey						; Non, bruit
 
 MenuRC5LearnIR:
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'>'
+		call	DisplayWriteChar
+
 		call	IRDetect							; On va voir ce qu'on a reçu
 
 		cpi		SystemIR,255
-		breq	MenuRC5ReturnFromLearn				; Erreur de transmission
+		brne	MenuRC5LearnOK
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'X'
+		call	DisplayWriteChar
+		rjmp	MenuRC5ReturnFromLearn
+MenuRC5LearnOK:
 
 		lds		Work,TCCR3B							; si le timer 3 ne tourne pas
 		andi	Work,0b00000111						; on lance le clignotement de la LED On
