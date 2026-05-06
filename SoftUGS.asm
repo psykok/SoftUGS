@@ -620,7 +620,7 @@ Init:
 
 		ldi 	Work,0b11101100						; 1 pour les sorties, 0 pour les entrées
 		out		DDRD,Work
-		clr		Work								; et on désactive les pullups
+		ldi 	Work,0b00000011						; Active les pullups sur PD0 (Power) et PD1 (IR)
 		out		PORTD,Work							; sur les entrées de ce port
 		
 ; --- Port E : Les 2 premiers bits en entrée (MOSI et MISO sont sur un bateau),
@@ -832,14 +832,31 @@ Main:   cli                        	    	        ; Pour démarrer, on interdit le
 ; -----------------------
 
 Dodo :
+		sbic	PinSwitchOn,SwitchOn				; Bouton Power appuyé (PD0=0) ?
+		rjmp	DodoCheckIR							; Non -> On va regarder l'IR
+DodoPollWait:
+		sbis	PinSwitchOn,SwitchOn				; On attend le relâchement du bouton
+		rjmp	DodoPollWait
+		sbr		StatReg1,EXP2(FlagPower)			; Bouton relâché -> On se réveille !
+		rjmp	AllezDebout
+DodoCheckIR:
 		sbrs	StatReg2,FlagIRRec					; On a reçu une commande IR ?
 		rjmp	WakeOnPowerSwitch					; 	- Non, alors on va voir si c'est le bouton On/StandBy qui nous a réveillé 
 
 													; 	- Oui, alors on va voir si c'était pour se réveiller...
+		sbic	PinsRC5,InRC5						; Le pin IR est-il à 0 ?
+		rjmp	DodoClearIR							; 	- Non (pin=1), c'est du bruit
+
 		ldi 	Work,1								; Pour la réception IR, on est obligé de redémarrer le Timer 2 pour effectuer le décodage
 		out		TCCR2,Work							; Démarre le Timer 2 à CK (pas de prescaler) -> 1 cycle de comptage dure 250ns
 
 		call	RecRC5								; On va voir quelle commande c'était
+		rjmp	WakeOnPowerSwitch
+
+DodoClearIR:
+		cbr		StatReg2,EXP2(FlagIRRec)			; Efface le flag IR
+		ldi		Work,0b00000011						; Réactive INT0 et INT1
+		out		EIMSK,Work
 
 WakeOnPowerSwitch:
 
@@ -890,6 +907,12 @@ Wait1:	dec     Work
 ; -- amplis ou bien seulement l'ampli casque              --
 ; ----------------------------------------------------------
 
+		clr		StatReg1								; Efface les flags pour que MultiDelay prenne le bon chemin
+		sbr		StatReg1,EXP2(FlagPower)				; Mais on garde FlagPower actif
+
+		ldi		Work,0b00000100							; Réactive l'interruption overflow du Timer 3
+		sts		ETIMSK,Work								; au cas où IdleTiming l'aurait désactivée
+
 		clr		Work
 		ldi		ZH,RAM_Start
 		ldi		ZL,RAM_Tempo
@@ -910,8 +933,8 @@ Wait1:	dec     Work
         
 ; -- On n'oublie pas d'autoriser les interruptions externes --
 
-        ldi     Work,0b00000011                 	; On autorise les interruptions externes INT 0 et INT1 
-        out     EIMSK,Work                      	; (Enable Interrupt Mask)
+        clr     Work                            	; On n'autorise aucune interruption externe pendant le démarrage
+        out     EIMSK,Work                      	; INT0 et INT1 seront activés plus tard dans MainLoop
 
 ; --------------------------------------------------------------------------------------
 ; -- On commence par fixer la luminosité au minimum avant l'alimentation du backlight --
@@ -1202,6 +1225,18 @@ MainLoop:
 
 		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
 		call	RecRC5								; 	- Bé oui, alors on va ouar ce que c'est
+
+MainLoopNoIR:
+
+; -- On réarme INT1 seulement si le pin IR est au repos (HIGH) --
+
+		sbrc	StatReg2,FlagIRRec					; Flag IR encore actif ?
+		rjmp	MainLoopSkipRearm					;	- Oui, on ne réarme pas
+		sbis	PinsRC5,InRC5						; Pin IR au repos (HIGH) ?
+		rjmp	MainLoopSkipRearm					;	- Non (LOW), on ne réarme pas
+		ldi		Work,0b00000011						; Les 2 conditions sont OK
+		out		EIMSK,Work							; On réactive INT0 et INT1
+MainLoopSkipRearm:
 
         sbrs    StatReg1,FlagPower             		 ; Si jamais l'ordre IR était d'arrêter le biniou
         rjmp    FallAsleep                     		 ; on y va immédiatement
@@ -1656,6 +1691,8 @@ WaitWEEProm:
         rjmp    WaitWEEProm
 
 		out     EEARL,Work                      ; On charge "l'adresse" pour l'EEPROM
+			clr		Work
+			out		EEARH,Work						; Sécurise l'adresse haute à 0
 		out     EEDR,Work2                      ; ainsi que la donnée
         
         sbi     EECR,EEMWE                      ; Master Write Enable

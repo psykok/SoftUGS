@@ -177,6 +177,7 @@ WaitBeforeExitRC5Menu:
 		clr		Work
 		out		EIMSK,Work							; On inhibe toutes les interruptions
 
+
 		ret											; on se casse de ce menu
 
 ; ---------------------------------
