@@ -73,11 +73,19 @@ IRRecInt:
 		in		Work,SREG
 		push	Work
 
+		ldi		Work,67									; 67 x 3 cycles = ~50µs @ 4MHz
+IRRecIntDelay:
+		dec		Work
+		brne	IRRecIntDelay
+
+		sbic	PinsRC5,InRC5						; PD1 encore à 0 (signal réel) ?
+		rjmp	IRRecIntNoise						; Non (déjà remonté), c'est du bruit
+
 		sbr		StatReg2,EXP2(FlagIRRec)			; Passe le Flag de réception IR à 1
-	
 		clr     Work			        			; On va inhiber les interruptions externes pour
 		out     EIMSK,Work							; éviter de les redéclencher au retour de l'interruption
 
+IRRecIntNoise:
 		pop		Work								; On récupère le registre éventuellement modifié
 		out		SREG,Work							; Récupère le Status Register
 		pop		Work								; 

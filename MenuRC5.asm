@@ -189,6 +189,10 @@ MenuRC5LearnKey:
 		sbis	PinMenu,SwitchMenu					; Avant de passer à la suite,
 		rjmp	MenuRC5LearnKey						; On attend le relachement du bouton de menu
 
+		clr		Work
+		out		EIMSK,Work							; Pas d'INT1 pendant l'apprentissage (on scrute PD1)
+		cbr		StatReg2,EXP2(FlagIRRec)		; Efface un éventuel flag parasite
+
 		ldi		Work,0
 		call	DisplayPlaceCurseur					; début de première ligne
 		mov		Work,MenuReg1						; De quelle fonction IR s'agit-il ?
@@ -206,8 +210,8 @@ MenuRC5AffKeyLearn:
 		call	DisplayAfficheChaine
 
 MenuRC5WaitKey:
-		sbrc	StatReg2,FlagIRRec					; On attend une réception IR
-		rjmp	MenuRC5LearnIR
+		sbis	PinsRC5,InRC5						; PD1 à 0 (signal IR) ?
+		rjmp	MenuRC5IRDetected					; Oui, on vérifie
 
 		sbis	PinSwitchMC,SwitchMC				; Un appui sur le bouton d'annulation pour sortir ?
 		rjmp	ExitRC5LearnKeyNoSave				; Oui, alors on y va
@@ -221,11 +225,39 @@ MenuRC5WaitKey:
 
 		rjmp	ExitRC5LearnKeySave					; oui, alors on va sauver
 
+MenuRC5IRDetected:
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'*'
+		call	DisplayWriteChar
+		ldi		Work,133								; ~100µs de debounce (133 x 3 cycles @ 4MHz)
+MenuRC5IRDebounce:
+		dec		Work
+		brne	MenuRC5IRDebounce
+		sbis	PinsRC5,InRC5						; PD1 toujours à 0 ?
+		rjmp	MenuRC5LearnIR						; Oui, signal réel
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'.'
+		call	DisplayWriteChar
+		rjmp	MenuRC5WaitKey						; Non, bruit
+
 MenuRC5LearnIR:
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'>'
+		call	DisplayWriteChar
+
 		call	IRDetect							; On va voir ce qu'on a reçu
 
 		cpi		SystemIR,255
-		breq	MenuRC5ReturnFromLearn				; Erreur de transmission
+		brne	MenuRC5LearnOK
+		ldi		Work,0x53
+		call	DisplayPlaceCurseur
+		ldi		Char,'X'
+		call	DisplayWriteChar
+		rjmp	MenuRC5ReturnFromLearn
+MenuRC5LearnOK:
 
 		lds		Work,TCCR3B							; si le timer 3 ne tourne pas
 		andi	Work,0b00000111						; on lance le clignotement de la LED On
@@ -263,10 +295,7 @@ MenuRC5SystemID:									; Cas particulier pour le SystemID
 		
 MenuRC5ReturnFromLearn:
 
-		cbr		StatReg2,EXP2(FlagIRRec)			; On repasse le flag de réception à 0 
-		ldi		Work,0b00000010						; Et on rétablit l'interruption IR
-		out		EIMSK,Work							; Qui avait été désactivée dans la routine d'interruption
-
+		cbr		StatReg2,EXP2(FlagIRRec)
 		rjmp	MenuRC5WaitKey
 
 

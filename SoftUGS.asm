@@ -642,7 +642,7 @@ Init:
         clr     Work                            	; On inhibe les interruptions externes.....
         out     EIMSK,Work                      	; par mesure de précaution avant de changer leur mode de déclenchement
 
-		ldi		Work,0b00000000						; INT0=niveau bas, INT1=niveau bas
+		ldi		Work,0b00001000						; INT0=niveau bas, INT1=front descendant
 		sts 	EICRA,Work							; (sts au lieu de out)
 
         ldi     Work,0b00010000                 	; Autorise le Sleep Mode en PowerDown 
@@ -1223,8 +1223,27 @@ MainLoop:
 
 ; -- Si le flag de réception IR est positionné, c'est qu'on a reçu une commande Infra-Rouge
 
-		sbrc	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
-		call	RecRC5								; 	- Bé oui, alors on va ouar ce que c'est
+		sbrs	StatReg2,FlagIRRec					; Flag de réception IR à 1 ?
+		rjmp	MainLoopNoIR						;	- Non, on passe
+
+		ldi		Count1,200							; Échantillonne PD1 pendant ~600µs
+MainLoopIRSample:
+		sbis	PinsRC5,InRC5						; PD1 à 0 (activité) ?
+		rjmp	MainLoopIRGo						; Oui, signal réel détecté
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		dec		Count1
+		brne	MainLoopIRSample
+		cbr		StatReg2,EXP2(FlagIRRec)		; PD1 resté haut -> bruit
+		rjmp	MainLoopNoIR
+
+MainLoopIRGo:
+		call	RecRC5
 
 MainLoopNoIR:
 
@@ -1289,9 +1308,17 @@ TestBypass:
 		rcall 	LectureEncodeur						; Lecture de l'encodeur
 		sbrs	StatReg1,FlagIncremente				; doit-on incrémenter le volume
 		sbrc	StatReg1,FlagDecremente				; ou le décrémenter ?
-		rcall	ChangeVolume						; l'un des deux...
+		rjmp	MainLoopDoVolume					; l'un des deux...
 
 		rjmp 	MainLoop							; et on boucle
+
+MainLoopDoVolume:
+		clr		Work
+		out		EIMSK,Work							; Inhibe INT1 pendant la comm AD8402
+		rcall	ChangeVolume
+		ldi		Work,0b00000011
+		out		EIMSK,Work							; Réactive INT0 et INT1
+		rjmp	MainLoop
 
 ; -- On remet tout comifo après un passage dans le menu --
 

@@ -55,3 +55,17 @@ By default uses `usbasp` programmer. Override with:
 ```sh
 make flash PROGRAMMER=avrisp2 PORT=/dev/ttyUSB0
 ```
+
+## IR Learning Diagnostics
+
+During RC5 remote control learning (Setup > RC5 menu > press Menu on a command), the last character on the second display line shows the current state:
+
+| Char | Meaning |
+|------|---------|
+| `*` | PD1 went LOW — a signal was detected on the IR input |
+| `.` | Debounce rejected — the pulse was shorter than 100µs (noise) |
+| `>` | IRDetect called — signal confirmed, decoding in progress |
+| `X` | Decode failed — IRDetect timed out or received garbage |
+| code | Success — the received RC5 code is displayed |
+
+A typical successful learning shows `*` then `>` then the code value. An `X` on the first attempt is normal — press the remote button again. If only dots (`.`) appear, the IR receiver is producing very short pulses. If nothing appears at all, the IR receiver may be disconnected or damaged.
